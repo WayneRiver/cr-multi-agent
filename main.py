@@ -19,6 +19,7 @@ from src.tools.mcp_client import MCPClient
 from src.utils.logger import logger
 from src.utils.metrics import MetricsCollector
 from config import settings, validate_required_settings
+from src.integrations.github import GitHubClient
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -73,6 +74,13 @@ async def lifespan(app: FastAPI):
         logger.info("✓ MCP 客户端已连接（mcp-server-analyzer）")
     except Exception as e:
         logger.warning(f"⚠ MCP 客户端连接失败（规范员将不可用）: {e}")
+
+    github_client = None
+    if settings.github_token:
+        github_client = GitHubClient(token=settings.github_token)
+        logger.info("✓ GitHub 客户端已初始化")
+    else:
+        logger.info("⚠ GitHub Token 未配置，PR 评论功能禁用")
     
     # 步骤 5：编译 LangGraph 工作流图
     logger.info("正在编译 LangGraph 工作流...")
@@ -90,6 +98,7 @@ async def lifespan(app: FastAPI):
     app.state.llm = llm
     app.state.redis_cache = redis_cache
     app.state.mcp_client = mcp_client
+    app.state.github_client = github_client
     app.state.graph = graph
     app.state.metrics = MetricsCollector()
     
@@ -105,6 +114,11 @@ async def lifespan(app: FastAPI):
     # 关闭 Redis 连接池（释放所有 TCP 连接到 Redis 服务器）
     await redis_cache.close()
     logger.info("✓ Redis 连接池已关闭")
+
+    # 关闭 GitHub 客户端（释放资源）
+    if github_client is not None:
+        await github_client.close()
+        logger.info("✓ GitHub 客户端已关闭")
 
     # 关闭 MCP 客户端（终止 mcp-server-analyzer 子进程，释放资源）
     await mcp_client.close()

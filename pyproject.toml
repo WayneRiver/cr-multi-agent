@@ -17,6 +17,7 @@ dependencies = [
     "pydantic-settings>=2.14.1",
     "python-dotenv>=1.2.2",
     "redis>=7.4.0",
+    "streamlit>=1.57.0",
     "uvicorn>=0.46.0",
 ]
 

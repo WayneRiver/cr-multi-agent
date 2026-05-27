@@ -67,22 +67,22 @@ async def build_workflow(
 
     style_checker = StyleChecker(
         mcp_client=mcp_client,
-        timeout=10,
+        timeout=15,
     )
 
     security_checker = SecurityChecker(
         llm=llm,
-        timeout=10,
+        timeout=15,
     )
 
     logic_checker = LogicChecker(
         llm=llm,
-        timeout=15,
+        timeout=20,
     )
 
     readability_checker = ReadabilityChecker(
         llm=llm,
-        timeout=10,
+        timeout=15,
     )
 
     # 3. 注册节点
